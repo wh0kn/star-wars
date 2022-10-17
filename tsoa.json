@@ -1,0 +1,9 @@
+{
+  "entryFile": "src/handlers/index.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "spec": {
+    "outputDirectory": "dist",
+    "specVersion": 3
+  }
+}
+
