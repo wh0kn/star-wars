@@ -1,5 +1,6 @@
 import { connect, model, Schema } from "mongoose";
 import { Character, Episode, DataSource, Planet } from "./models";
+import { SecretsManager } from "aws-sdk";
 
 export const Episodes = model<Episode>(
   "Episode",
@@ -36,7 +37,17 @@ export const Characters = model<Character>(
 
 export class DB implements DataSource {
   constructor() {
-    connect("mongodb://root:example@127.0.0.1:27017/sw?authSource=admin");
+    const secretsmanager = new SecretsManager({ apiVersion: "2017-10-17" });
+    secretsmanager.getSecretValue(
+      { SecretId: process.env.DB_SECRET_NAME },
+      (err, data) => {
+        console.log({ err, data });
+        const { username, password, host, port } = JSON.parse(
+          data.SecretString
+        );
+        connect(`mongodb://${username}:${password}@${host}:${port}`);
+      }
+    );
   }
 
   async countCharacters() {

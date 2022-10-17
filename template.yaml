@@ -12,7 +12,94 @@ Globals:
   Api:
     TracingEnabled: True
 
+Parameters:
+  Prefix:
+    Type: String
+    Description: Prefix for resources
+
+  DocDBIdentifier:
+    Type: String
+    Description: Amazon DocumentDB cluster identifier
+
+  DocDBUsername:
+    Type: String
+    Description: Username for the Amazon DocumentDB cluster
+
+  DocDBPassword:
+    Type: String
+    Description: Password for the Amazon DocumentDB cluster
+    NoEcho: true
+    MinLength: 5
+
+  DocDBVPCSubnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: VPC Subnet with connectivity to Amazon DocumentDB cluster
+
+  DocDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security group with access to Amazon DocumentDB from within the VPC
+
+  APIUsername:
+    Type: String
+    Description: Username to allow access to the API
+
+  APIPassword:
+    Type: String
+    Description: Password to allow access to the API
+    NoEcho: true
+    MinLength: 4
+
 Resources:
+# Secret Manager
+  DocDBSecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub ${Prefix}-DocDBSecret
+      Description: This secret has the credentials for the DocumentDB cluster
+      SecretString:
+        !Join
+          - ''
+          - - '{"username":"'
+            - !Ref DocDBUsername
+            - '","password":"'
+            - !Ref DocDBPassword
+            - '", "ssl": true}'
+
+  SecretDocDBClusterAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId: !Ref DocDBSecret
+      TargetId: !Ref DocDBIdentifier
+      TargetType: AWS::DocDB::DBCluster
+
+# IAM
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+      Policies:
+        - PolicyName: DocumentDBSecret
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref DocDBSecret
+      RoleName: !Sub ${Prefix}-Role-Lambda
+# Lambda
   ListCharactersFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -183,7 +270,19 @@ Resources:
             Method: GET
 
 Outputs:
-  WebEndpoint:
-    Description: API Gateway endpoint URL for Prod stage
-    Value:
-      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+  StackName:
+    Value: !Sub ${AWS::StackName}
+  DocDBSecret:
+    Value: !Ref DocDBSecret
+  LambdaExecutionRole:
+    Value: !Ref LambdaExecutionRole
+  LambdaLayerPymongo:
+    Value: !Ref LambdaLayerPymongo
+  LambdaCRUDFunction:
+    Value: !Ref LambdaCRUDFunction
+  LambdaBasicAuthFunction:
+    Value: !Ref LambdaBasicAuthFunction
+  APIDocDBREST:
+    Value: !Ref APIDocDBREST
+  APIRoot:
+    Value: !Sub ${APIDocDBREST}.execute-api.${AWS::Region}.amazonaws.com/${Prefix}-api/docdb
