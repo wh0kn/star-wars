@@ -5,7 +5,6 @@ Description: >
 
   Sample SAM Template for star-wars
   
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 3
@@ -14,31 +13,177 @@ Globals:
     TracingEnabled: True
 
 Resources:
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  ListCharactersFunction:
+    Type: AWS::Serverless::Function
     Properties:
-      CodeUri: hello-world/
-      Handler: app.lambdaHandler
+      CodeUri: dist/
+      Handler: handlers/list-characters.listCharactersHandler
       Runtime: nodejs16.x
       Architectures:
         - x86_64
       Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        ListCharacters:
+          Type: Api
           Properties:
-            Path: /hello
-            Method: get
+            Path: /characters
+            Method: GET
+  CreateCharacterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/create-character.createCharacterHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        CreateCharacter:
+          Type: Api
+          Properties:
+            Path: /characters
+            Method: POST
+  RetrieveCharacterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/retrieve-character.retrieveCharacterHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        RetrieveCharacter:
+          Type: Api
+          Properties:
+            Path: /characters/{characterId}
+            Method: GET
+  ListCharacterEpisodesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/list-character-episodes.listCharacterEpisodesHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        ListCharacterEpisodes:
+          Type: Api
+          Properties:
+            Path: /characters/{characterId}/episodes
+            Method: GET
+  AddCharacterToEpisodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/add-character-to-episode.addCharacterToEpisodeHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        AddCharacterToEpisode:
+          Type: Api
+          Properties:
+            Path: /characters/{characterId}/episodes/{episodeId}
+            Method: PUT
+  RemoveCharacterFromEpisodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/remove-character-from-episode.removeCharacterFromEpisodeHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        RemoveCharacterFromEpisode:
+          Type: Api
+          Properties:
+            Path: /characters/{characterId}/episodes/{episodeId}
+            Method: DELETE
+  ListEpisodesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/list-episodes.listEpisodesHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        ListEpisodes:
+          Type: Api
+          Properties:
+            Path: /episodes
+            Method: GET
+  CreateEpisodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/create-episode.createEpisodeHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        CreateEpisode:
+          Type: Api
+          Properties:
+            Path: /episodes
+            Method: POST
+  RetrieveEpisodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/retrieve-episode.retrieveEpisodeHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        RetrieveEpisode:
+          Type: Api
+          Properties:
+            Path: /episodes/{episodeId}
+            Method: GET
+  ListPlanetsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/list-planets.listPlanetsHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        ListPlanets:
+          Type: Api
+          Properties:
+            Path: /planets
+            Method: GET
+  CreatePlanetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/create-planet.createPlanetHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        CreatePlanet:
+          Type: Api
+          Properties:
+            Path: /planets
+            Method: POST
+  RetrievePlanetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist/
+      Handler: handlers/retrieve-planet.retrievePlanetHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      Events:
+        RetrievePlanet:
+          Type: Api
+          Properties:
+            Path: /planets/{planetId}
+            Method: GET
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  WebEndpoint:
+    Description: API Gateway endpoint URL for Prod stage
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/

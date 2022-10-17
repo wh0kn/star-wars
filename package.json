@@ -29,8 +29,9 @@
     "eslint": "eslint --max-warnings=0 ./src",
     "swagger": "tsoa spec",
     "prettier": "prettier --check ./src",
-    "prebuild": "yarn clean && yarn swagger && yarn prettier && yarn eslint",
-    "build": "ttsc",
+    "prebuild": "yarn clean && yarn prettier && yarn eslint",
+    "postbuild": "yarn swagger",
+    "build": "ttsc && cp package.json yarn.lock dist/",
     "test": "jest"
   }
 }
